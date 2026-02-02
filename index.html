@@ -16,7 +16,7 @@
             border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
         }
         button:hover { background: #0099cc; }
-        .info { color: #888; font-size: 0.9em; }
+        .info { color: #888; font-size: 0.85em; margin-top: 4px; display: block; }
     </style>
 </head>
 <body>
@@ -26,24 +26,19 @@
 
     <script>
         // ==========================================
-        // CONFIGURACIÓN Y TEXTOS (Edita esto)
+        // CONFIGURACIÓN Y TEXTOS
         // ==========================================
         const CONFIG = {
             user: "jc-csl",
             repo: "vr-files",
             folder: "files",
-            tituloPagina: "VR CSL",
-            textoCargando: "Buscando modelos en el servidor...",
+            tituloPagina: "MI REPOSITORIO VR",
+            textoCargando: "Buscando modelos...",
             textoBotonCopiar: "Copiar URL",
             textoCopiado: "¡Copiado! ✅",
-            errorTexto: "No se encontraron archivos o hubo un error."
+            errorTexto: "Error al conectar con el servidor."
         };
 
-        // ==========================================
-        // LÓGICA DEL SISTEMA
-        // ==========================================
-        
-        // Aplicar título inicial
         document.getElementById('main-title').innerText = CONFIG.tituloPagina;
         document.getElementById('lista').innerText = CONFIG.textoCargando;
 
@@ -56,18 +51,20 @@
 
                 if (!res.ok) throw new Error();
 
-                listaDiv.innerHTML = ""; // Limpiar texto de carga
+                listaDiv.innerHTML = "";
 
                 archivos.forEach(archivo => {
                     if (archivo.type === "file") {
                         const urlPublica = `https://${CONFIG.user}.github.io/${CONFIG.repo}/${archivo.path}`;
+                        // Cálculo de MB con 2 decimales
+                        const pesoMB = (archivo.size / (1024 * 1024)).toFixed(2);
                         
                         const item = document.createElement('div');
                         item.className = 'file-item';
                         item.innerHTML = `
                             <div>
-                                <strong>${archivo.name}</strong><br>
-                                <span class="info">${(archivo.size / 1024).toFixed(1)} KB</span>
+                                <strong>${archivo.name}</strong>
+                                <span class="info">${pesoMB} MB</span>
                             </div>
                             <button onclick="copiar('${urlPublica}', this)">${CONFIG.textoBotonCopiar}</button>
                         `;
