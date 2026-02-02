@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <title>VR Repository</title>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; text-align: center; }
-        .container { max-width: 800px; margin: auto; text-align: left; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; text-align: center; }
+        .container { max-width: 850px; margin: auto; text-align: left; }
         .file-item { 
-            background: #2a2a2a; margin: 10px 0; padding: 15px; 
-            border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid #333;
+            background: #2a2a2a; margin: 12px 0; padding: 18px; 
+            border-radius: 10px; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #383838; transition: transform 0.2s;
         }
+        .file-item:hover { transform: scale(1.01); border-color: #00d4ff; }
+        .file-info { display: flex; flex-direction: column; }
+        .file-name { font-weight: bold; font-size: 1.1em; color: #fff; }
+        .file-size { color: #888; font-size: 0.85em; margin-top: 4px; }
         button { 
-            background: #00d4ff; border: none; padding: 10px 15px; 
-            border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
+            background: #00d4ff; border: none; padding: 12px 20px; 
+            border-radius: 6px; cursor: pointer; font-weight: bold; color: #1a1a1a;
+            transition: 0.3s;
         }
-        button:hover { background: #0099cc; }
-        .info { color: #888; font-size: 0.85em; margin-top: 4px; display: block; }
+        button:hover { background: #0099cc; box-shadow: 0 0 10px rgba(0,212,255,0.3); }
     </style>
 </head>
 <body>
@@ -26,64 +30,72 @@
 
     <script>
         // ==========================================
-        // CONFIGURACIÓN Y TEXTOS
+        // CONFIGURACIÓN CONSTANTE AL INICIO
         // ==========================================
         const CONFIG = {
             user: "jc-csl",
             repo: "vr-files",
             folder: "files",
-            tituloPagina: "MI REPOSITORIO VR",
-            textoCargando: "Buscando modelos...",
-            textoBotonCopiar: "Copiar URL",
-            textoCopiado: "¡Copiado! ✅",
-            errorTexto: "Error al conectar con el servidor."
+            tituloPagina: "VR CSL",
+            textoCargando: "Cargando modelos 3D...",
+            textoBoton: "Copiar URL",
+            textoExito: "¡Copiado! ✅",
+            errorMsg: "Error: No se pudieron listar los archivos."
         };
 
+        // Aplicar título
         document.getElementById('main-title').innerText = CONFIG.tituloPagina;
-        document.getElementById('lista').innerText = CONFIG.textoCargando;
 
-        async function cargarArchivos() {
-            const listaDiv = document.getElementById('lista');
+        async function cargarModelos() {
+            const contenedor = document.getElementById('lista');
+            contenedor.innerHTML = `<p style="text-align:center">${CONFIG.textoCargando}</p>`;
+
             try {
-                const urlApi = `https://api.github.com/repos/${CONFIG.user}/${CONFIG.repo}/contents/${CONFIG.folder}`;
-                const res = await fetch(urlApi);
-                const archivos = await res.json();
+                const api = `https://api.github.com/repos/${CONFIG.user}/${CONFIG.repo}/contents/${CONFIG.folder}`;
+                const respuesta = await fetch(api);
+                const items = await respuesta.json();
 
-                if (!res.ok) throw new Error();
+                if (!respuesta.ok) throw new Error();
 
-                listaDiv.innerHTML = "";
+                contenedor.innerHTML = ""; // Limpiar
 
-                archivos.forEach(archivo => {
+                items.forEach(archivo => {
                     if (archivo.type === "file") {
-                        const urlPublica = `https://${CONFIG.user}.github.io/${CONFIG.repo}/${archivo.path}`;
-                        // Cálculo de MB con 2 decimales
-                        const pesoMB = (archivo.size / (1024 * 1024)).toFixed(2);
+                        const urlLink = `https://${CONFIG.user}.github.io/${CONFIG.repo}/${archivo.path}`;
                         
-                        const item = document.createElement('div');
-                        item.className = 'file-item';
-                        item.innerHTML = `
-                            <div>
-                                <strong>${archivo.name}</strong>
-                                <span class="info">${pesoMB} MB</span>
+                        // CONVERSIÓN A MB
+                        const sizeMB = (archivo.size / (1024 * 1024)).toFixed(2);
+
+                        const div = document.createElement('div');
+                        div.className = 'file-item';
+                        div.innerHTML = `
+                            <div class="file-info">
+                                <span class="file-name">${archivo.name}</span>
+                                <span class="file-size">${sizeMB} MB</span>
                             </div>
-                            <button onclick="copiar('${urlPublica}', this)">${CONFIG.textoBotonCopiar}</button>
+                            <button onclick="copiarAlPortapapeles('${urlLink}', this)">${CONFIG.textoBoton}</button>
                         `;
-                        listaDiv.appendChild(item);
+                        contenedor.appendChild(div);
                     }
                 });
             } catch (e) {
-                listaDiv.innerHTML = `<p style="color:red">${CONFIG.errorTexto}</p>`;
+                contenedor.innerHTML = `<p style="color:#ff6b6b; text-align:center">${CONFIG.errorMsg}</p>`;
             }
         }
 
-        function copiar(texto, boton) {
-            navigator.clipboard.writeText(texto);
-            const original = boton.innerText;
-            boton.innerText = CONFIG.textoCopiado;
-            setTimeout(() => boton.innerText = original, 2000);
+        function copiarAlPortapapeles(texto, btn) {
+            navigator.clipboard.writeText(texto).then(() => {
+                const original = btn.innerText;
+                btn.innerText = CONFIG.textoExito;
+                btn.style.background = "#00ff88";
+                setTimeout(() => {
+                    btn.innerText = original;
+                    btn.style.background = "#00d4ff";
+                }, 1500);
+            });
         }
 
-        cargarArchivos();
+        cargarModelos();
     </script>
 </body>
 </html>
