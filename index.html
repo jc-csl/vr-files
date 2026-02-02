@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Repositorio de Archivos VR</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        a { color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>Modelos VR en /files</h1>
+    <table id="file-table">
+        <thead>
+            <tr>
+                <th>Nombre del Archivo</th>
+                <th>Tamaño (KB)</th>
+                <th>Enlace Público</th>
+            </tr>
+        </thead>
+        <tbody id="file-list"></tbody>
+    </table>
+
+    <script>
+        const user = "TU_USUARIO_DE_GITHUB"; // CAMBIA ESTO
+        const repo = "vr-files";
+        const folder = "files";
+
+        async function getFiles() {
+            const response = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${folder}`);
+            const files = await response.json();
+            const tableBody = document.getElementById('file-list');
+
+            files.forEach(file => {
+                if (file.type === "file") {
+                    const row = `<tr>
+                        <td>${file.name}</td>
+                        <td>${(file.size / 1024).toFixed(2)} KB</td>
+                        <td><a href="https://${user}.github.io/${repo}/${file.path}" target="_blank">Copiar URL</a></td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                }
+            });
+        }
+        getFiles();
+    </script>
+</body>
+</html>
