@@ -1,48 +1,89 @@
-<script>
-    const user = "jc-csl"; 
-    const repo = "vr-files";
-    const folder = "files";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Asset Repo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background-color: #1a1a1a; color: #eee; }
+        h1 { color: #00d4ff; text-align: center; }
+        .container { max-width: 900px; margin: auto; background: #2a2a2a; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; padding: 12px; border-bottom: 2px solid #444; color: #888; text-transform: uppercase; font-size: 0.8em; }
+        td { padding: 15px 12px; border-bottom: 1px solid #333; }
+        .btn-copy { background: #00d4ff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; color: #1a1a1a; }
+        .btn-copy:hover { background: #0099cc; }
+        .size-tag { color: #888; font-size: 0.9em; }
+    </style>
+</head>
+<body>
 
-    async function getFiles() {
-        const tableBody = document.getElementById('file-list');
-        try {
-            const response = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${folder}`);
-            const files = await response.json();
+    <h1>VR Repository Files</h1>
+    
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre del Archivo</th>
+                    <th>Tamaño</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="file-list">
+                <tr><td colspan="3">Cargando modelos...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-            tableBody.innerHTML = "";
-            files.forEach(file => {
-                if (file.type === "file") {
-                    const url = `https://${user}.github.io/${repo}/${file.path}`;
-                    const row = `
-                    <tr>
-                        <td>${file.name}</td>
-                        <td>${(file.size / 1024).toFixed(2)} KB</td>
-                        <td>
-                            <button onclick="copyToClipboard('${url}', this)">Copiar URL</button>
-                        </td>
-                    </tr>`;
-                    tableBody.innerHTML += row;
-                }
-            });
-        } catch (error) {
-            tableBody.innerHTML = "<tr><td colspan='3'>Error al cargar archivos.</td></tr>";
+    <script>
+        const user = "jc-csl"; 
+        const repo = "vr-files";
+        const folder = "files";
+
+        async function getFiles() {
+            const tableBody = document.getElementById('file-list');
+            try {
+                const response = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${folder}`);
+                if (!response.ok) throw new Error("No se pudo conectar con la API");
+                
+                const files = await response.json();
+                tableBody.innerHTML = "";
+
+                files.forEach(file => {
+                    if (file.type === "file") {
+                        const url = `https://${user}.github.io/${repo}/${file.path}`;
+                        const row = `
+                        <tr>
+                            <td><strong>${file.name}</strong></td>
+                            <td class="size-tag">${(file.size / 1024).toFixed(1)} KB</td>
+                            <td>
+                                <button class="btn-copy" onclick="copyToClipboard('${url}', this)">Copiar URL</button>
+                            </td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    }
+                });
+            } catch (error) {
+                tableBody.innerHTML = `<tr><td colspan="3" style="color:#ff4444">Error: ${error.message}</td></tr>`;
+            }
         }
-    }
 
-    function copyToClipboard(text, button) {
-        navigator.clipboard.writeText(text).then(() => {
-            const originalText = button.innerText;
-            button.innerText = "¡Copiado! ✅";
-            button.style.background = "#28a745";
-            button.style.color = "white";
-            
-            setTimeout(() => {
-                button.innerText = originalText;
-                button.style.background = "";
-                button.style.color = "";
-            }, 2000);
-        });
-    }
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.innerText;
+                button.innerText = "¡Copiado!";
+                button.style.background = "#00ff88";
+                
+                setTimeout(() => {
+                    button.innerText = originalText;
+                    button.style.background = "#00d4ff";
+                }, 1500);
+            }).catch(err => {
+                alert("Error al copiar: " + err);
+            });
+        }
 
-    getFiles();
-</script>
+        getFiles();
+    </script>
+</body>
+</html>
