@@ -1,59 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>VR Repo</title>
+    <meta charset="UTF-8">
+    <title>VR Repository</title>
     <style>
-        body { font-family: sans-serif; background: #222; color: white; padding: 20px; }
-        .file-item { background: #333; margin: 10px 0; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; }
-        button { background: #00d4ff; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+        body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; text-align: center; }
+        .container { max-width: 800px; margin: auto; text-align: left; }
+        .file-item { 
+            background: #2a2a2a; margin: 10px 0; padding: 15px; 
+            border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #333;
+        }
+        button { 
+            background: #00d4ff; border: none; padding: 10px 15px; 
+            border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        button:hover { background: #0099cc; }
+        .info { color: #888; font-size: 0.9em; }
     </style>
 </head>
 <body>
-    <h1>Mis Archivos VR</h1>
-    <div id="lista">Cargando...</div>
+
+    <h1 id="main-title"></h1>
+    <div class="container" id="lista"></div>
 
     <script>
-        // CONFIGURACIÓN
-        const user = "jc-csl"; 
-        const repo = "vr-files";
-        const folder = "files";
+        // ==========================================
+        // CONFIGURACIÓN Y TEXTOS (Edita esto)
+        // ==========================================
+        const CONFIG = {
+            user: "jc-csl",
+            repo: "vr-files",
+            folder: "files",
+            tituloPagina: "VR CSL",
+            textoCargando: "Buscando modelos en el servidor...",
+            textoBotonCopiar: "Copiar URL",
+            textoCopiado: "¡Copiado! ✅",
+            errorTexto: "No se encontraron archivos o hubo un error."
+        };
 
-        async function cargar() {
-            const div = document.getElementById('lista');
+        // ==========================================
+        // LÓGICA DEL SISTEMA
+        // ==========================================
+        
+        // Aplicar título inicial
+        document.getElementById('main-title').innerText = CONFIG.tituloPagina;
+        document.getElementById('lista').innerText = CONFIG.textoCargando;
+
+        async function cargarArchivos() {
+            const listaDiv = document.getElementById('lista');
             try {
-                const apiURL = `https://api.github.com/repos/${user}/${repo}/contents/${folder}`;
-                console.log("Consultando:", apiURL);
-                
-                const res = await fetch(apiURL);
-                const data = await res.json();
+                const urlApi = `https://api.github.com/repos/${CONFIG.user}/${CONFIG.repo}/contents/${CONFIG.folder}`;
+                const res = await fetch(urlApi);
+                const archivos = await res.json();
 
-                if (!res.ok) {
-                    div.innerHTML = "Error de API: " + (data.message || "No encontrado");
-                    return;
-                }
+                if (!res.ok) throw new Error();
 
-                div.innerHTML = ""; // Limpiar
-                data.forEach(file => {
-                    const fileURL = `https://${user}.github.io/${repo}/${file.path}`;
-                    div.innerHTML += `
-                        <div class="file-item">
-                            <span>${file.name}</span>
-                            <button onclick="copiar('${fileURL}', this)">Copiar URL</button>
-                        </div>`;
+                listaDiv.innerHTML = ""; // Limpiar texto de carga
+
+                archivos.forEach(archivo => {
+                    if (archivo.type === "file") {
+                        const urlPublica = `https://${CONFIG.user}.github.io/${CONFIG.repo}/${archivo.path}`;
+                        
+                        const item = document.createElement('div');
+                        item.className = 'file-item';
+                        item.innerHTML = `
+                            <div>
+                                <strong>${archivo.name}</strong><br>
+                                <span class="info">${(archivo.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                            <button onclick="copiar('${urlPublica}', this)">${CONFIG.textoBotonCopiar}</button>
+                        `;
+                        listaDiv.appendChild(item);
+                    }
                 });
             } catch (e) {
-                div.innerHTML = "Error crítico: " + e.message;
+                listaDiv.innerHTML = `<p style="color:red">${CONFIG.errorTexto}</p>`;
             }
         }
 
         function copiar(texto, boton) {
             navigator.clipboard.writeText(texto);
             const original = boton.innerText;
-            boton.innerText = "¡Copiado!";
-            setTimeout(() => boton.innerText = original, 1000);
+            boton.innerText = CONFIG.textoCopiado;
+            setTimeout(() => boton.innerText = original, 2000);
         }
 
-        cargar();
+        cargarArchivos();
     </script>
 </body>
 </html>
