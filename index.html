@@ -1,50 +1,48 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Repositorio de Archivos VR</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        a { color: #007bff; text-decoration: none; }
-    </style>
-</head>
-<body>
-    <h1>Modelos VR en /files</h1>
-    <table id="file-table">
-        <thead>
-            <tr>
-                <th>Nombre del Archivo</th>
-                <th>Tamaño (KB)</th>
-                <th>Enlace Público</th>
-            </tr>
-        </thead>
-        <tbody id="file-list"></tbody>
-    </table>
+<script>
+    const user = "jc-csl"; 
+    const repo = "vr-files";
+    const folder = "files";
 
-    <script>
-        const user = "jc-csl"; // CAMBIA ESTO
-        const repo = "vr-files";
-        const folder = "files";
-
-        async function getFiles() {
+    async function getFiles() {
+        const tableBody = document.getElementById('file-list');
+        try {
             const response = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${folder}`);
             const files = await response.json();
-            const tableBody = document.getElementById('file-list');
 
+            tableBody.innerHTML = "";
             files.forEach(file => {
                 if (file.type === "file") {
-                    const row = `<tr>
+                    const url = `https://${user}.github.io/${repo}/${file.path}`;
+                    const row = `
+                    <tr>
                         <td>${file.name}</td>
                         <td>${(file.size / 1024).toFixed(2)} KB</td>
-                        <td><a href="https://${user}.github.io/${repo}/${file.path}" target="_blank">Copiar URL</a></td>
+                        <td>
+                            <button onclick="copyToClipboard('${url}', this)">Copiar URL</button>
+                        </td>
                     </tr>`;
                     tableBody.innerHTML += row;
                 }
             });
+        } catch (error) {
+            tableBody.innerHTML = "<tr><td colspan='3'>Error al cargar archivos.</td></tr>";
         }
-        getFiles();
-    </script>
-</body>
-</html>
+    }
+
+    function copyToClipboard(text, button) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = button.innerText;
+            button.innerText = "¡Copiado! ✅";
+            button.style.background = "#28a745";
+            button.style.color = "white";
+            
+            setTimeout(() => {
+                button.innerText = originalText;
+                button.style.background = "";
+                button.style.color = "";
+            }, 2000);
+        });
+    }
+
+    getFiles();
+</script>
